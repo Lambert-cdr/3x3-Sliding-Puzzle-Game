@@ -1,8 +1,8 @@
 #include <raylib.h>
 #include <stdio.h>
 
-#define EKRAN_BOYUTU 600
-#define KARE_BOYUTU (EKRAN_BOYUTU / 3)
+#define EKRAN_BOYUTU 800
+#define KARE_BOYUTU (200)
 
 void moveUp(int board[3][3]){
     int tempSatir = -1, tempSutun = -1, tempC;
@@ -120,7 +120,7 @@ void drawBoard(int board[3][3]) {
 }
 
 int main() {
-
+    int sayac=0;
     InitWindow(EKRAN_BOYUTU, EKRAN_BOYUTU, "Puzzle Oyunu");
     SetTargetFPS(60); 
 
@@ -130,12 +130,16 @@ int main() {
 
         if (IsKeyPressed(KEY_W)) {
             moveUp(board);
+            sayac++;
         } else if (IsKeyPressed(KEY_S)) {
             moveDown(board);
+            sayac++;
         } else if (IsKeyPressed(KEY_A)) {
             moveLeft(board);
+            sayac++;
         } else if (IsKeyPressed(KEY_D)) {
             moveRight(board);
+            sayac++;
         }
 
         BeginDrawing();
@@ -144,10 +148,9 @@ int main() {
         ClearBackground((Color){ 236, 240, 241, 255 });
 
         drawBoard(board);
-
+        DrawText(TextFormat("Hamle Sayisi: %d",sayac), 20, 650, 25, BLACK);
         EndDrawing();
     }
-
     CloseWindow();
 
     return 0;

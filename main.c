@@ -5,7 +5,7 @@
 #define Yükseklik_BOYUTU 700
 #define KARE_BOYUTU 200
 
-void moveUp(int board[3][3]){
+int moveUp(int board[3][3]){
     int tempSatir = -1, tempSutun = -1, tempC;
     for (int i = 0; i < 3; i++){
         for (int j = 0; j < 3; j++){
@@ -19,10 +19,12 @@ void moveUp(int board[3][3]){
         tempC = board[tempSatir-1][tempSutun];
         board[tempSatir-1][tempSutun] = 0;
         board[tempSatir][tempSutun] = tempC;
+        return 1;
     }
+    return 0;
 }
 
-void moveDown(int board[3][3]){
+int moveDown(int board[3][3]){
     int tempSatir = -1, tempSutun = -1, tempC;
     for (int i=0; i<3; i++){
         for(int j=0; j<3; j++){
@@ -36,10 +38,12 @@ void moveDown(int board[3][3]){
         tempC = board[tempSatir+1][tempSutun];
         board[tempSatir+1][tempSutun] = 0;
         board[tempSatir][tempSutun] = tempC;
+        return 1;
     }
+    return 0;
 }
 
-void moveRight(int board[3][3]){
+int moveRight(int board[3][3]){
     int tempSatir = -1, tempSutun = -1, tempC;
     for (int i=0; i<3; i++){
         for(int j=0; j<3; j++){
@@ -53,10 +57,12 @@ void moveRight(int board[3][3]){
         tempC = board[tempSatir][tempSutun+1];
         board[tempSatir][tempSutun+1] = 0;
         board[tempSatir][tempSutun] = tempC;
+        return 1;
     }
+    return 0;
 }
 
-void moveLeft(int board[3][3]){
+int moveLeft(int board[3][3]){
     int tempSatir = -1, tempSutun = -1, tempC;
     for (int i=0; i<3; i++){
         for(int j=0; j<3; j++){
@@ -70,7 +76,9 @@ void moveLeft(int board[3][3]){
         tempC = board[tempSatir][tempSutun-1];
         board[tempSatir][tempSutun-1] = 0;
         board[tempSatir][tempSutun] = tempC;
+        return 1;
     }
+    return 0;
 }
 void tahtayiKar(int board[3][3],int hamleSayisi)
 {
@@ -130,17 +138,17 @@ int main() {
     while (!WindowShouldClose()) {
 
         if (IsKeyPressed(KEY_W)) {
-            moveUp(board);
-            sayac++;
+            if(moveUp(board)==1)
+                sayac++;
         } else if (IsKeyPressed(KEY_S)) {
-            moveDown(board);
-            sayac++;
+            if(moveDown(board)==1)
+                sayac++;
         } else if (IsKeyPressed(KEY_A)) {
-            moveLeft(board);
-            sayac++;
+            if(moveLeft(board))
+                sayac++;
         } else if (IsKeyPressed(KEY_D)) {
-            moveRight(board);
-            sayac++;
+            if(moveRight(board))
+                sayac++;
         }
 
         BeginDrawing();

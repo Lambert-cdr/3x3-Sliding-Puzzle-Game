@@ -6,8 +6,13 @@
 #define Yükseklik_BOYUTU 700
 #define KARE_BOYUTU 200
 #define MAX_ISIM_UZUNLUK 30
+#define MAX_OYUNCU_KAYDI 50
 
 typedef enum { EKRAN_ISIM_GIRISI, EKRAN_OYUN } OyunDurumu;
+typedef struct {
+    char isim[MAX_ISIM_UZUNLUK];
+    int skor;
+} OyuncuSkor;
 
 int moveUp(int board[3][3]){
     int tempSatir = -1, tempSutun = -1, tempC;
@@ -27,7 +32,6 @@ int moveUp(int board[3][3]){
     }
     return 0;
 }
-
 int moveDown(int board[3][3]){
     int tempSatir = -1, tempSutun = -1, tempC;
     for (int i=0; i<3; i++){
@@ -46,7 +50,6 @@ int moveDown(int board[3][3]){
     }
     return 0;
 }
-
 int moveRight(int board[3][3]){
     int tempSatir = -1, tempSutun = -1, tempC;
     for (int i=0; i<3; i++){
@@ -65,7 +68,6 @@ int moveRight(int board[3][3]){
     }
     return 0;
 }
-
 int moveLeft(int board[3][3]){
     int tempSatir = -1, tempSutun = -1, tempC;
     for (int i=0; i<3; i++){
@@ -84,6 +86,7 @@ int moveLeft(int board[3][3]){
     }
     return 0;
 }
+
 void tahtayiKar(int board[3][3],int hamleSayisi)
 {
     int i;
@@ -131,9 +134,46 @@ void drawBoard(int board[3][3]) {
         }
     }
 }
+int oyunuKazandiMi(int board[3][3]) {
+    return (board[0][0] == 1 && board[0][1] == 2 && board[0][2] == 3 &&
+            board[1][0] == 4 && board[1][1] == 5 && board[1][2] == 6 &&
+            board[2][0] == 7 && board[2][1] == 8 && board[2][2] == 0);
+}
+void skoruKaydet(const char* isim, int yeniSkor) {
+    FILE *dosya = fopen("skorlar.txt", "r");
+    OyuncuSkor skorlar[MAX_OYUNCU_KAYDI];
+    int kayitSayisi = 0;
+    int oyuncuBulundu = 0;
 
+    if (dosya != NULL) {
+        while (fscanf(dosya, "%s %d", skorlar[kayitSayisi].isim, &skorlar[kayitSayisi].skor) != EOF) {
+            if (strcmp(skorlar[kayitSayisi].isim, isim) == 0) {
+                oyuncuBulundu = 1;
+                if (yeniSkor < skorlar[kayitSayisi].skor) {
+                    skorlar[kayitSayisi].skor = yeniSkor;
+                }
+            }
+            kayitSayisi++;
+            if(kayitSayisi >= MAX_OYUNCU_KAYDI) break;
+        }
+        fclose(dosya);
+    }
+    if (!oyuncuBulundu && kayitSayisi < MAX_OYUNCU_KAYDI) {
+        strcpy(skorlar[kayitSayisi].isim, isim);
+        skorlar[kayitSayisi].skor = yeniSkor;
+        kayitSayisi++;
+    }
+    dosya = fopen("skorlar.txt", "w");
+    if (dosya != NULL) {
+        for (int i = 0; i < kayitSayisi; i++) {
+            fprintf(dosya, "%s %d\n", skorlar[i].isim, skorlar[i].skor);
+        }
+        fclose(dosya);
+    }
+}
 int main() {
     int sayac=0;
+    int oyunBitti = 0;
     InitWindow(Genislik_BOYUTU,Yükseklik_BOYUTU, "Puzzle Oyunu");
     SetTargetFPS(60); 
 
@@ -145,7 +185,6 @@ int main() {
     tahtayiKar(board,200);
     while (!WindowShouldClose()) {
         if (mevcutDurum == EKRAN_ISIM_GIRISI) {
-            // Klavye girişini al
             int key = GetCharPressed();
             while (key > 0) {
                 if ((key >= 32) && (key <= 125) && (harfSayisi < MAX_ISIM_UZUNLUK)) {
@@ -168,20 +207,30 @@ int main() {
         } else if (mevcutDurum == EKRAN_OYUN) {
             if (IsKeyPressed(KEY_TAB)) {
                 mevcutDurum = EKRAN_ISIM_GIRISI;}
-
-        if (IsKeyPressed(KEY_W)) {
-            if(moveUp(board)==1)
-                sayac++;
-        } else if (IsKeyPressed(KEY_S)) {
-            if(moveDown(board)==1)
-                sayac++;
-        } else if (IsKeyPressed(KEY_A)) {
-            if(moveLeft(board))
-                sayac++;
-        } else if (IsKeyPressed(KEY_D)) {
-            if(moveRight(board))
-                sayac++;
+        if(!oyunBitti){
+            if (IsKeyPressed(KEY_W)) {
+                if(moveUp(board)==1)
+                    sayac++;
+            } else if (IsKeyPressed(KEY_S)) {
+                if(moveDown(board)==1)
+                    sayac++;
+            } else if (IsKeyPressed(KEY_A)) {
+                if(moveLeft(board))
+                    sayac++;
+            } else if (IsKeyPressed(KEY_D)) {
+                if(moveRight(board))
+                    sayac++;
+            }
+            if (oyunuKazandiMi(board)) {
+                oyunBitti = 1; // Bayrağı kaldır ki sürekli dosyaya yazmasın
+                skoruKaydet(oyuncuIsmi, sayac);
+            }
         }
+    }
+    if (IsKeyPressed(KEY_SPACE) && mevcutDurum == EKRAN_OYUN) {
+            tahtayiKar(board, 100);
+            sayac = 0;
+            oyunBitti = 0;
     }
 
         BeginDrawing();
@@ -205,14 +254,11 @@ int main() {
         DrawText("Tekrar Oyna(BAS SPACE)",650,20,25,BLACK);
         DrawText("ISIM EKRANINA DON(BAS TAB)",650,50,25,BLACK);
 
-        if( board[0][0] == 1 && board[0][1]== 2 && board[0][2] == 3 && board[1][0] == 4 && board[1][1]== 5 &&board[1][2] == 6 && board[2][0] == 7 && board[2][1]== 8)
-            DrawText("KAZANDINIZ",350,650,50,GREEN);
+        if(oyunBitti) {
+            DrawText("KAZANDINIZ", 300, 620, 50, GREEN);
+            DrawText("Skor Kaydedildi!", 350, 675, 20, DARKGREEN); // Kısa bir bilgi mesajı eklendi
         }
-        if(IsKeyPressed(KEY_SPACE))
-        {
-            tahtayiKar( board,100);
-            sayac=0;
-        }
+    }
         EndDrawing();
     }
     CloseWindow();

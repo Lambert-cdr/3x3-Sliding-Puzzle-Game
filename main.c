@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
-#define Genislik_BOYUTU 1100
+#define Genislik_BOYUTU 1150
 #define Yükseklik_BOYUTU 700
 #define KARE_BOYUTU 200
 #define MAX_ISIM_UZUNLUK 30
@@ -86,7 +86,6 @@ int moveLeft(int board[3][3]){
     }
     return 0;
 }
-
 void tahtayiKar(int board[3][3],int hamleSayisi)
 {
     int i;
@@ -101,32 +100,23 @@ void tahtayiKar(int board[3][3],int hamleSayisi)
             moveLeft(board);}
           else if (rastgeleHamle == 3){
             moveRight(board);}
-
     }
 }
 void drawBoard(int board[3][3]) {
     for (int i = 0; i < 3; i++) {
         for (int j = 0; j < 3; j++) {
             int value = board[i][j];
-
- 
             float posX = j * KARE_BOYUTU;//kareX
             float posY = i * KARE_BOYUTU;//kareY
-
             Rectangle tileRec = { posX + 10, posY + 10, KARE_BOYUTU - 20, KARE_BOYUTU - 20 };
-
             if (value != 0) {
-
                 DrawRectangleRounded(tileRec, 0.15f, 16, (Color){ 41, 128, 185, 255 });//kareler
-
                 // Sayı çizimi
                 const char* text = TextFormat("%d", value);
                 int fontSize = 60;
                 int textWidth = MeasureText(text, fontSize);
-
                 int textX = posX + (KARE_BOYUTU / 2) - (textWidth / 2);
                 int textY = posY + (KARE_BOYUTU / 2) - (fontSize / 2);
-
                 DrawText(text, textX, textY, fontSize, RAYWHITE);
             } else {
                 DrawRectangleRounded(tileRec, 0.15f, 16, (Color){ 220, 224, 230, 255 });//arkaplan
@@ -135,16 +125,14 @@ void drawBoard(int board[3][3]) {
     }
 }
 int oyunuKazandiMi(int board[3][3]) {
-    return (board[0][0] == 1 && board[0][1] == 2 && board[0][2] == 3 &&
-            board[1][0] == 4 && board[1][1] == 5 && board[1][2] == 6 &&
-            board[2][0] == 7 && board[2][1] == 8 && board[2][2] == 0);
+    return (board[0][0] == 1 && board[0][1] == 2 && board[0][2] == 3 && board[1][0] == 4 && board[1][1] == 5 &&
+            board[1][2] == 6 &&board[2][0] == 7 && board[2][1] == 8 && board[2][2] == 0);
 }
 void skoruKaydet(const char* isim, int yeniSkor) {
     FILE *dosya = fopen("skorlar.txt", "r");
     OyuncuSkor skorlar[MAX_OYUNCU_KAYDI];
     int kayitSayisi = 0;
     int oyuncuBulundu = 0;
-
     if (dosya != NULL) {
         while (fscanf(dosya, "%s %d", skorlar[kayitSayisi].isim, &skorlar[kayitSayisi].skor) != EOF) {
             if (strcmp(skorlar[kayitSayisi].isim, isim) == 0) {
@@ -171,6 +159,31 @@ void skoruKaydet(const char* isim, int yeniSkor) {
         fclose(dosya);
     }
 }
+int top5SkorlariAl(OyuncuSkor top5[]) {
+    FILE *dosya = fopen("skorlar.txt", "r");
+    if (dosya == NULL) return 0; 
+    OyuncuSkor tumSkorlar[MAX_OYUNCU_KAYDI];
+    int kayitSayisi = 0;
+    while (fscanf(dosya, "%s %d", tumSkorlar[kayitSayisi].isim, &tumSkorlar[kayitSayisi].skor) != EOF) {
+        kayitSayisi++;
+        if (kayitSayisi >= MAX_OYUNCU_KAYDI) break;
+    }
+    fclose(dosya);
+    for (int i = 0; i < kayitSayisi - 1; i++) {
+        for (int j = 0; j < kayitSayisi - i - 1; j++) {
+            if (tumSkorlar[j].skor > tumSkorlar[j + 1].skor) {
+                OyuncuSkor temp = tumSkorlar[j];
+                tumSkorlar[j] = tumSkorlar[j + 1];
+                tumSkorlar[j + 1] = temp;
+            }
+        }
+    }
+    int alinacak = (kayitSayisi < 5) ? kayitSayisi : 5;
+    for (int i = 0; i < alinacak; i++) {
+        top5[i] = tumSkorlar[i];
+    }
+    return alinacak;
+}
 int main() {
     int sayac=0;
     int oyunBitti = 0;
@@ -180,6 +193,8 @@ int main() {
     char oyuncuIsmi[MAX_ISIM_UZUNLUK] = "\0";
     int harfSayisi = 0;
     OyunDurumu mevcutDurum = EKRAN_ISIM_GIRISI;
+    OyuncuSkor top5[5];
+    int top5Sayisi = top5SkorlariAl(top5);
 
     int board[3][3] = {{1, 2, 3}, {4, 5, 6}, {7, 8, 0}};
     tahtayiKar(board,200);
@@ -203,9 +218,8 @@ int main() {
             if (IsKeyPressed(KEY_ENTER) && harfSayisi > 0) {
                 mevcutDurum = EKRAN_OYUN;
             }
-
         } else if (mevcutDurum == EKRAN_OYUN) {
-            if (IsKeyPressed(KEY_TAB)) {
+            if (IsKeyPressed(KEY_M)) {
                 mevcutDurum = EKRAN_ISIM_GIRISI;}
         if(!oyunBitti){
             if (IsKeyPressed(KEY_W)) {
@@ -222,8 +236,9 @@ int main() {
                     sayac++;
             }
             if (oyunuKazandiMi(board)) {
-                oyunBitti = 1; // Bayrağı kaldır ki sürekli dosyaya yazmasın
+                oyunBitti = 1; 
                 skoruKaydet(oyuncuIsmi, sayac);
+                top5Sayisi=top5SkorlariAl(top5);
             }
         }
     }
@@ -232,36 +247,43 @@ int main() {
             sayac = 0;
             oyunBitti = 0;
     }
-
         BeginDrawing();
         ClearBackground((Color){ 236, 240, 241, 255 });
         if (mevcutDurum == EKRAN_ISIM_GIRISI) {
-            // İsim Giriş Ekranı
             DrawText("HOS GELDINIZ!", 350, 200, 40, DARKGRAY);
             DrawText("Lütfen isminizi yazin ve ENTER'a basin:", 280, 280, 20, GRAY);
             DrawRectangle(300, 330, 400, 50, WHITE);
             DrawRectangleLines(300, 330, 400, 50, BLUE);
             DrawText(oyuncuIsmi, 320, 345, 25, MAROON);
-
             if (((int)(GetTime() * 2) % 2) == 0) {
                 DrawText("_", 325 + MeasureText(oyuncuIsmi, 25), 345, 25, MAROON);
             }
-
         } else if (mevcutDurum == EKRAN_OYUN) {
         drawBoard(board);
-        DrawText(TextFormat("Oyuncu: %s", oyuncuIsmi), 650, 80, 25, DARKBLUE);
         DrawText(TextFormat("Hamle Sayisi: %d",sayac), 20, 650, 25, BLACK);
         DrawText("Tekrar Oyna(BAS SPACE)",650,20,25,BLACK);
-        DrawText("ISIM EKRANINA DON(BAS TAB)",650,50,25,BLACK);
-
+        DrawText("MENU (BAS M)",650,50,25,BLACK);
+        DrawText("LIDERLIK TABLOSU (BASILI TUT TAB)",650,80,25,BLACK);
+        DrawText(TextFormat("Oyuncu: %s", oyuncuIsmi), 650,110, 25, DARKBLUE);
+        if(IsKeyDown(KEY_TAB)){
+            DrawRectangle(0, 0, Genislik_BOYUTU, Yükseklik_BOYUTU, (Color){ 0, 0, 0, 200 });
+            DrawText("--- EN IYI 5 SKOR ---", 330, 150, 40, GOLD);
+            if (top5Sayisi == 0) {
+                DrawText("Henuz kaydedilmis bir skor yok.", 330, 250, 25, LIGHTGRAY);
+            } else {
+                for (int i = 0; i < top5Sayisi; i++) {
+                    const char* skorYazisi = TextFormat("%d. %s  -  %d Hamle", i + 1, top5[i].isim, top5[i].skor);
+                    DrawText(skorYazisi, 380, 250 + (i * 60), 30, RAYWHITE);
+                }
+            }
+        }   
+        }
         if(oyunBitti) {
             DrawText("KAZANDINIZ", 300, 620, 50, GREEN);
             DrawText("Skor Kaydedildi!", 350, 675, 20, DARKGREEN); // Kısa bir bilgi mesajı eklendi
         }
-    }
         EndDrawing();
     }
     CloseWindow();
-
     return 0;
 }

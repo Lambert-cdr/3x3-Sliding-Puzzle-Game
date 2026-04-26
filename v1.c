@@ -280,7 +280,7 @@ int main() {
         }
         if(oyunBitti) {
             DrawText("KAZANDINIZ", 300, 620, 50, GREEN);
-            DrawText("Skor Kaydedildi!", 350, 675, 20, DARKGREEN); // Kısa bir bilgi mesajı eklendi
+            DrawText("Skor Kaydedildi!", 350, 675, 20, DARKGREEN);
         }
         EndDrawing();
     }

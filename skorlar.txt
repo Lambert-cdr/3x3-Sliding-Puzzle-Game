@@ -2,3 +2,5 @@ Kadir 5
 KAAZ 47
 Quaresma 7
 Betul 51
+kadir 4
+kadir  3
